@@ -1,0 +1,2 @@
+# Runtime hanya menggunakan pustaka standar Python 3.10+ (termasuk sqlite3).
+# Tidak ada paket pip yang perlu diinstal.

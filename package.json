@@ -1,0 +1,11 @@
+{
+  "name": "loketkecil",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "python3 server.py --preview --port 4173 --db .qa/preview.sqlite3 --no-browser",
+    "check": "node --check web/operator.mjs && node --check web/display.mjs && node --check web/outbox.mjs",
+    "test": "node --test tests/outbox.test.mjs"
+  }
+}

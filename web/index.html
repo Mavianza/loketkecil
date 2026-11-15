@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#1e4147" />
+    <meta
+      name="description"
+      content="Panel antrean lokal dengan loket, layar panggilan, laporan dan pemulihan permintaan."
+    />
+    <title>LoketKecil · Giliran jelas, layanan teratur</title>
+    <link rel="icon" href="/icon.svg" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script type="module" src="/operator.mjs"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/"
+        ><img src="/icon.svg" width="36" height="36" alt="" /><span
+          >LoketKecil<small>GILIRAN JELAS. LAYANAN TERATUR.</small></span
+        ></a
+      >
+      <div class="connection" id="connection" role="status">Menghubungkan…</div>
+      <a class="button light" href="/display/" target="_blank" rel="noopener"
+        >Layar panggilan <span aria-hidden="true">→</span></a
+      ><button class="button ghost" type="button" id="help-button">
+        Panduan
+      </button>
+    </header>
+    <main class="shell">
+      <section class="alert" id="error-banner" role="alert" hidden>
+        <strong>Data belum dapat diperbarui</strong>
+        <p id="error-text"></p>
+        <button class="button" type="button" id="reload-state">
+          Coba muat ulang
+        </button>
+      </section>
+      <section class="alert amber" id="pending-banner" role="status" hidden>
+        <strong>Masih ada permintaan yang perlu dipastikan</strong>
+        <p id="pending-text">
+          Permintaan disimpan di browser ini. Coba ulang permintaan yang sama
+          agar tidak menjalankan tindakan dua kali.
+        </p>
+        <div class="toolbar">
+          <button class="button" type="button" id="retry-pending">
+            Coba ulang permintaan</button
+          ><button class="button ghost" type="button" id="check-pending">
+            Periksa status
+          </button>
+        </div>
+      </section>
+      <div class="page-heading">
+        <div>
+          <div class="eyebrow">MEJA KENDALI / PANEL PETUGAS</div>
+          <h1 id="session-title">Selamat datang di LoketKecil.</h1>
+          <p id="session-subtitle">
+            Mulai satu sesi layanan, lalu bagikan nomor antrean.
+          </p>
+        </div>
+        <div class="heading-actions">
+          <label class="sr-only" for="session-select"
+            >Sesi yang ditampilkan</label
+          ><select id="session-select">
+            <option value="">Belum ada sesi</option></select
+          ><button class="button outline" type="button" id="new-session">
+            Buka sesi</button
+          ><button
+            class="button outline"
+            type="button"
+            id="close-session"
+            hidden
+          >
+            Tutup sesi
+          </button>
+        </div>
+      </div>
+      <div class="sample-banner" id="synthetic-note" hidden>
+        DATA CONTOH SINTETIS
+        <span>Nomor dan alias ini hanya untuk mencoba aplikasi.</span>
+      </div>
+      <div class="archive-note" id="archive-note" hidden>
+        Arsip sesi · perubahan tidak tersedia. Kamu masih bisa melihat riwayat
+        dan mengunduh laporannya.
+      </div>
+      <section class="welcome panel" id="welcome">
+        <div class="welcome-mark" aria-hidden="true">A001</div>
+        <div>
+          <span class="eyebrow">MULAI DENGAN ALUR YANG SEDERHANA</span>
+          <h2>Ambil nomor. Panggil. Selesaikan.</h2>
+          <p>
+            Atur hingga empat loket dalam satu antrean bersama. Nomor yang belum
+            hadir bisa dilewatkan, lalu dimasukkan kembali di akhir antrean.
+          </p>
+          <div class="toolbar">
+            <button class="button primary" type="button" id="start-session">
+              Buka sesi pertama</button
+            ><button class="button outline" type="button" id="load-demo">
+              Coba data contoh
+            </button>
+          </div>
+        </div>
+      </section>
+      <div id="workspace" hidden>
+        <section class="summary" aria-label="Ringkasan sesi">
+          <div>
+            <span>MENUNGGU GILIRAN</span><strong id="count-waiting">0</strong
+            ><small>nomor di antrean</small>
+          </div>
+          <div>
+            <span>SEDANG DILAYANI</span><strong id="count-serving">0</strong
+            ><small id="open-counter-count">loket aktif</small>
+          </div>
+          <div>
+            <span>SELESAI HARI INI</span><strong id="count-done">0</strong
+            ><small>layanan tercatat</small>
+          </div>
+          <div>
+            <span>DILEWATKAN / BATAL</span><strong id="count-other">0</strong
+            ><small>tetap masuk laporan</small>
+          </div>
+        </section>
+        <div class="workspace">
+          <aside class="intake panel">
+            <div class="panel-head">
+              <div class="eyebrow">MEJA PENDAFTARAN</div>
+              <h2>Terbitkan nomor</h2>
+            </div>
+            <form id="issue-form">
+              <label for="alias">Alias pengunjung <span>opsional</span></label
+              ><input
+                id="alias"
+                maxlength="40"
+                placeholder="Misalnya: Tamu 1"
+                autocomplete="off"
+              />
+              <p class="hint">
+                Cukup alias singkat. Alias tidak ditampilkan pada layar
+                panggilan.
+              </p>
+              <button
+                class="button primary full"
+                id="issue-button"
+                type="submit"
+              >
+                + Terbitkan nomor
+              </button>
+            </form>
+            <div class="issued" id="issued" hidden aria-live="polite">
+              <span>NOMOR BERHASIL DITERBITKAN</span
+              ><strong id="issued-code">A001</strong
+              ><small>Berikan nomor ini kepada pengunjung.</small>
+            </div>
+            <div class="queue-rules">
+              <span class="tiny-mark" aria-hidden="true">i</span>
+              <p>
+                Nomor dipanggil berdasarkan urutan masuk. Nomor yang masuk ulang
+                ditempatkan di bagian paling akhir.
+              </p>
+            </div>
+            <div class="export-actions">
+              <a
+                id="csv-link"
+                class="button outline full"
+                href="/api/report.csv"
+                >Unduh laporan CSV</a
+              ><a class="text-link" href="/api/backup.sqlite3"
+                >Unduh cadangan database</a
+              >
+            </div>
+          </aside>
+          <div class="main-column">
+            <section aria-labelledby="counters-title">
+              <div class="section-heading">
+                <div>
+                  <div class="eyebrow">LAYANI SATU PER SATU</div>
+                  <h2 id="counters-title">Loket pelayanan</h2>
+                </div>
+                <span class="subtle"
+                  >Satu nomor hanya menempati satu loket.</span
+                >
+              </div>
+              <div class="counters" id="counters"></div>
+            </section>
+            <section class="panel queue-panel" aria-labelledby="queue-title">
+              <div class="panel-title">
+                <div>
+                  <div class="eyebrow">URUTAN YANG SAMA UNTUK SEMUA LOKET</div>
+                  <h2 id="queue-title">Daftar nomor</h2>
+                </div>
+                <span id="ticket-total" class="badge">0 nomor</span>
+              </div>
+              <div class="queue-tools">
+                <label class="sr-only" for="ticket-search"
+                  >Cari nomor atau alias</label
+                ><input
+                  id="ticket-search"
+                  type="search"
+                  placeholder="Cari nomor atau alias…"
+                /><label class="sr-only" for="status-filter"
+                  >Filter status nomor</label
+                ><select id="status-filter">
+                  <option value="all">Semua status</option>
+                  <option value="waiting">Menunggu</option>
+                  <option value="serving">Dilayani</option>
+                  <option value="skipped">Dilewatkan</option>
+                  <option value="done">Selesai</option>
+                  <option value="cancelled">Dibatalkan</option>
+                </select>
+              </div>
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Nomor</th>
+                      <th>Alias</th>
+                      <th>Status</th>
+                      <th>Loket</th>
+                      <th>Tindakan</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tickets"></tbody>
+                </table>
+              </div>
+              <div id="ticket-empty" class="empty-state" hidden>
+                Belum ada nomor yang sesuai.
+              </div>
+              <div class="panel-footer">
+                <span id="table-count">0 nomor ditampilkan</span
+                ><span>Nomor yang batal tidak dipakai ulang.</span>
+              </div>
+            </section>
+            <section class="history-panel" aria-labelledby="history-title">
+              <div class="section-heading">
+                <h2 id="history-title">Jejak layanan</h2>
+                <span class="subtle">40 aktivitas terakhir sesi ini</span>
+              </div>
+              <ol id="events"></ol>
+            </section>
+          </div>
+        </div>
+      </div>
+      <footer class="footer">
+        <strong>LoketKecil <span>/ 1.0</span></strong>
+        <p>
+          Data tersimpan di komputer ini. Layar panggilan dapat dibuka pada
+          monitor kedua dari komputer yang sama.
+        </p>
+        <span id="last-update">Menunggu data pertama.</span>
+      </footer>
+    </main>
+    <dialog id="session-dialog" aria-labelledby="session-dialog-title">
+      <div class="dialog-head">
+        <div>
+          <div class="eyebrow">SATU ANTREAN UNTUK SATU HARI</div>
+          <h2 id="session-dialog-title">Buka sesi layanan</h2>
+        </div>
+        <button
+          class="close"
+          data-close
+          type="button"
+          aria-label="Tutup form sesi"
+        >
+          ×
+        </button>
+      </div>
+      <form id="session-form">
+        <label for="session-name">Nama layanan</label
+        ><input
+          id="session-name"
+          maxlength="80"
+          placeholder="Misalnya: Meja administrasi kegiatan"
+          required
+        /><label for="session-day">Tanggal sesi</label
+        ><input
+          id="session-day"
+          type="date"
+          min="2000-01-01"
+          max="2100-12-31"
+          required
+        />
+        <p class="hint">
+          Tanggal awal mengikuti WITA; boleh disesuaikan. Satu tanggal memiliki
+          satu sesi.
+        </p>
+        <label for="counter-names">Nama loket</label
+        ><textarea id="counter-names" rows="4" required>
+Loket 1
+Loket 2</textarea
+        >
+        <p class="hint">
+          Satu nama per baris, maksimal empat loket. Seluruh loket mengambil
+          nomor dari antrean yang sama.
+        </p>
+        <p id="session-error" class="form-error" role="alert" hidden></p>
+        <div class="dialog-actions">
+          <button class="button outline" data-close type="button">Batal</button
+          ><button class="button primary" type="submit">Buka sesi</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="confirm-dialog" aria-labelledby="confirm-title">
+      <div class="dialog-head">
+        <h2 id="confirm-title">Lanjutkan tindakan?</h2>
+        <button
+          class="close"
+          data-close
+          type="button"
+          aria-label="Tutup konfirmasi"
+        >
+          ×
+        </button>
+      </div>
+      <p id="confirm-description" class="dialog-copy"></p>
+      <div class="dialog-actions">
+        <button class="button outline" data-close type="button">Batal</button
+        ><button class="button primary" id="confirm-action" type="button">
+          Lanjutkan
+        </button>
+      </div>
+    </dialog>
+    <dialog id="help-dialog" aria-labelledby="help-title">
+      <div class="dialog-head">
+        <h2 id="help-title">Satu alur, giliran lebih jelas.</h2>
+        <button
+          class="close"
+          data-close
+          type="button"
+          aria-label="Tutup panduan"
+        >
+          ×
+        </button>
+      </div>
+      <ol class="help-list">
+        <li>
+          <strong>Buka sesi.</strong>
+          <p>Tentukan nama layanan, tanggal, dan satu hingga empat loket.</p>
+        </li>
+        <li>
+          <strong>Terbitkan nomor.</strong>
+          <p>
+            Berikan nomor kepada pengunjung. Alias opsional dan hanya ada pada
+            panel petugas serta laporan.
+          </p>
+        </li>
+        <li>
+          <strong>Panggil dari loket kosong.</strong>
+          <p>
+            Nomor menunggu paling depan akan masuk ke loket tersebut. Tekan
+            Selesai setelah layanannya selesai.
+          </p>
+        </li>
+        <li>
+          <strong>Jika belum hadir, lewati.</strong>
+          <p>
+            Nomor tetap tercatat. Tombol Masuk ulang menaruhnya di akhir
+            antrean, bukan menyelipkan di depan.
+          </p>
+        </li>
+        <li>
+          <strong>Akhiri dan cadangkan.</strong>
+          <p>
+            Tutup sesi setelah tidak ada nomor menunggu atau dilayani. Arsip dan
+            laporan tetap tersedia.
+          </p>
+        </li>
+      </ol>
+      <div class="help-notice">
+        Jika jawaban permintaan terputus, gunakan Coba ulang permintaan.
+        Permintaan yang sama dipastikan ulang tanpa menjalankan tindakan dua
+        kali. Gunakan satu tab petugas aktif per browser.
+      </div>
+      <p class="hint">
+        Aplikasi ini untuk antrean umum lokal. Tidak melakukan triase medis,
+        layanan prioritas, pendaftaran resmi, atau integrasi instansi.
+      </p>
+    </dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+    <noscript
+      ><p class="alert">
+        Aktifkan JavaScript untuk mengelola antrean.
+      </p></noscript
+    >
+  </body>
+</html>

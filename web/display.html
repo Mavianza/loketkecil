@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#1e4147" />
+    <title>LoketKecil · Layar panggilan</title>
+    <link rel="icon" href="/icon.svg" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script type="module" src="/display.mjs"></script>
+  </head>
+  <body class="display-body">
+    <header class="display-header">
+      <a class="brand" href="/"
+        ><img src="/icon.svg" width="40" height="40" alt="" /><span
+          >LoketKecil<small>LAYAR PANGGILAN</small></span
+        ></a
+      >
+      <div>
+        <span id="display-day">Menunggu sesi</span
+        ><strong id="display-clock">—</strong>
+      </div>
+    </header>
+    <main class="display-main">
+      <div class="eyebrow">SILAKAN MENUJU LOKET YANG TERTERA</div>
+      <h1 id="display-title">Menunggu informasi layanan.</h1>
+      <p id="display-status">Nomor akan muncul setelah dipanggil petugas.</p>
+      <div class="display-alert" id="display-alert" role="alert" hidden>
+        Koneksi belum tersambung. Tampilan ini adalah data terakhir yang
+        berhasil dimuat; jangan menganggapnya sebagai panggilan baru.
+      </div>
+      <div class="display-counters" id="display-counters"></div>
+      <section class="display-next">
+        <div>
+          <span>BERIKUTNYA DALAM ANTREAN</span
+          ><strong id="display-wait-count">0 nomor menunggu</strong>
+        </div>
+        <div id="display-next-numbers">—</div>
+      </section>
+    </main>
+    <footer class="display-footer">
+      <span>Mohon siapkan kebutuhan layananmu sebelum nomor dipanggil.</span
+      ><span id="display-updated">Belum menerima data.</span>
+    </footer>
+  </body>
+</html>
